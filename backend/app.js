@@ -7,10 +7,16 @@ app.use(cors());
 app.use(express.json());
 
 
-const client = new MongoClient('mongodb://localhost:27017/geoData', {
+// const client = new MongoClient('mongodb://localhost:27017/geoData', {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
+
+const client = new MongoClient(process.env.DATABASE_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
 
 const dbName = 'geoData'; 
 const collectionName = 'features'; 

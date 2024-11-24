@@ -6,37 +6,39 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import axios from "axios";
 
 const App = () => {
-  const [interSectedTiles, setInterSectedTiles] = useState([]);
+  const [interSectedTiles, setInterSectedTiles] = useState(null); // Initialize with null for conditional rendering.
 
-  // const onCreated = (e) => {
-  //   const layer = e.layer;
-  //   const geoJson = layer.toGeoJSON();
-  //   console.log("geoJsondata",geoJsonData.features.length);
-  //   const coordinates = geoJson.geometry.coordinates[0];
-  //   const polygon = `POLYGON((${coordinates
-  //     .map((c) => c.join(" "))
-  //     .join(", ")}))`;
+  const onCreated = async (e) => {
+    try {
+      const layer = e.layer;
+      const geoJson = layer.toGeoJSON();
+      const coordinates = geoJson.geometry.coordinates[0];
+      const aoi = {
+        aoi: {
+          type: "Polygon",
+          coordinates: [coordinates],
+        },
+      };
 
-  //   axios
-  //     .post("http://localhost:5000/api/tiles/intersect", { polygon })
-  //     .then((response) => setTiles(response.data))
-  //     .catch((error) => console.error(error));
-  // };
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+      console.log("API_URL", API_URL);
 
-  const onCreated = (e) => {
-    const layer = e.layer;
-    const geoJson = layer.toGeoJSON();
-    const coordinates = geoJson.geometry.coordinates[0];
-    const aoi = {
-      aoi: {
-        type: "Polygon",
-        coordinates: [coordinates],
-      },
-    };
-    axios
-      .post("http://localhost:5000/api/tiles/intersect", aoi)
-      .then((response) => setInterSectedTiles(response.data))
-      .catch((error) => console.error(error));
+      const { data } = await axios.post(`${API_URL}/api/tiles/intersect`, aoi);
+
+      const geoJsonData = {
+        type: "FeatureCollection",
+        features: data.map((tile) => ({
+          type: "Feature",
+          geometry: tile.geometry,
+          properties: tile.properties || {},
+        })),
+      };
+
+      console.log("GeoJSON Data:", geoJsonData);
+      setInterSectedTiles(geoJsonData); 
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   return (
@@ -49,7 +51,13 @@ const App = () => {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        <GeoJSON data={interSectedTiles} style={{ color: "red", weight: 2 }} />
+         {interSectedTiles && (
+          <GeoJSON
+            key={JSON.stringify(interSectedTiles)}  
+            data={interSectedTiles}
+            style={{ color: "red", weight: 2 }}
+          />
+        )}
 
         <FeatureGroup>
           <EditControl

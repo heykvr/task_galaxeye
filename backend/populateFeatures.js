@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 
 // Update this with the path to your JSON file
-const filePath = "../data/features.json";
+const filePath = "./features.json";
 
 // MongoDB connection URI
 const mongoURI = "mongodb://mongo:27017/geoData";
